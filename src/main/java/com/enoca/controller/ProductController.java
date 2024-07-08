@@ -3,6 +3,8 @@ package com.enoca.controller;
 
 
 import com.enoca.model.DTO.ProductDTO;
+import com.enoca.model.PriceHistory;
+import com.enoca.repository.PriceHistoryRepository;
 import com.enoca.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,8 @@ import java.util.List;
 public class ProductController {
     @Autowired
     private ProductService productService;
+    @Autowired
+    private PriceHistoryRepository priceHistoryRepository;
 
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getAllProducts() {
@@ -40,5 +44,9 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/product/history/{productId}")
+    public ResponseEntity<List<PriceHistory>> getPriceHistory(@PathVariable Long productId) {
+        return ResponseEntity.ok(priceHistoryRepository.findByProductId(productId));
     }
 }

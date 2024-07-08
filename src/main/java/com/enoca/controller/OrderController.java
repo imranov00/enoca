@@ -17,8 +17,6 @@ import java.util.List;
 public class OrderController {
     @Autowired
     private OrderService orderService;
-    @Autowired
-    private PriceHistoryRepository priceHistoryRepository;
 
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<OrderDTO>> getAllOrdersForCustomer(@PathVariable Long customerId) {
@@ -36,8 +34,5 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/product/history/{productId}")
-    public ResponseEntity<List<PriceHistory>> getPriceHistory(@PathVariable Long productId) {
-        return ResponseEntity.ok(priceHistoryRepository.findByProductId(productId));
-    }
+
 }
