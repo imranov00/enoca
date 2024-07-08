@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,16 +24,21 @@ public class ProductService {
     private PriceHistoryRepository priceHistoryRepository;
 
     public List<ProductDTO> getAllProducts() {
-        return productRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        List<Product> products = productRepository.findAll();
+        List<ProductDTO> productDTOs = new ArrayList<>();
+        for (Product product : products) {
+            productDTOs.add(convertToDTO(product));
+        }
+        return productDTOs;
     }
 
+
     public ProductDTO getProduct(Long id) {
-        return productRepository.findById(id)
-                .map(this::convertToDTO)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+        return convertToDTO(product);
     }
+
 
     public ProductDTO createProduct(ProductDTO productDTO) {
         Product product = convertToEntity(productDTO);
@@ -43,7 +49,6 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // Save price history before updating the product price
         PriceHistory priceHistory = new PriceHistory();
         priceHistory.setProduct(product);
         priceHistory.setPrice(product.getPrice());

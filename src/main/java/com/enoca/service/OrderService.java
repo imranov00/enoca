@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,10 +90,14 @@ public class OrderService {
         orderDTO.setId(order.getId());
         orderDTO.setOrderDate(order.getOrderDate());
         orderDTO.setTotalPrice(order.getTotalPrice());
-        List<OrderItemDTO> items = order.getItems().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+
+        List<OrderItemDTO> items = new ArrayList<>();
+        for (OrderItem orderItem : order.getItems()) {
+            OrderItemDTO orderItemDTO = convertToDTO(orderItem);
+            items.add(orderItemDTO);
+        }
         orderDTO.setItems(items);
+
         return orderDTO;
     }
 

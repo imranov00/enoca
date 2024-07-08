@@ -9,6 +9,7 @@ import com.enoca.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,16 +19,24 @@ public class CustomerService {
     private CustomerRepository customerRepository;
 
     public List<CustomerDTO> getAllCustomers() {
-        return customerRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        List<Customer> customers = customerRepository.findAll();
+        List<CustomerDTO> customerDTOs = new ArrayList<>();
+
+        for (Customer customer : customers) {
+            CustomerDTO customerDTO = convertToDTO(customer);
+            customerDTOs.add(customerDTO);
+        }
+
+        return customerDTOs;
     }
 
+
     public CustomerDTO getCustomer(Long id) {
-        return customerRepository.findById(id)
-                .map(this::convertToDTO)
+        Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
+        return convertToDTO(customer);
     }
+
 
     public CustomerDTO addCustomer(CustomerDTO customerDTO) {
         Customer customer = convertToEntity(customerDTO);

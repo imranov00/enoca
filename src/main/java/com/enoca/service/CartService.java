@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,18 +74,17 @@ public class CartService {
     public void removeProductFromCart(Long customerId, Long productId, int quantity) {
         Cart cart = cartRepository.findByCustomerId(customerId);
         if (cart != null) {
-            // Belirtilen productId'ye sahip OrderItem'ları bul
-            List<OrderItem> itemsToRemove = cart.getItems().stream()
-                    .filter(item -> item.getProduct().getId().equals(productId))
-                    .collect(Collectors.toList());
-
-            for (OrderItem item : itemsToRemove) {
-                if (item.getQuantity() > quantity) {
-                    item.setQuantity(item.getQuantity() - quantity);
-                    orderItemRepository.save(item);
-                } else {
-                    cart.getItems().remove(item);
-                    orderItemRepository.delete(item);
+            Iterator<OrderItem> iterator = cart.getItems().iterator();
+            while (iterator.hasNext()) {
+                OrderItem item = iterator.next();
+                if (item.getProduct().getId().equals(productId)) {
+                    if (item.getQuantity() > quantity) {
+                        item.setQuantity(item.getQuantity() - quantity);
+                        orderItemRepository.save(item);
+                    } else {
+                        iterator.remove();
+                        orderItemRepository.delete(item);
+                    }
                 }
             }
 
@@ -91,6 +92,7 @@ public class CartService {
             cartRepository.save(cart);
         }
     }
+
 
     @Transactional
     public void emptyCart(Long customerId) {
@@ -103,22 +105,29 @@ public class CartService {
     }
 
     private void updateCartTotalPrice(Cart cart) {
-        BigDecimal totalPrice = cart.getItems().stream()
-                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        for (OrderItem item : cart.getItems()) {
+            BigDecimal itemTotalPrice = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            totalPrice = totalPrice.add(itemTotalPrice);
+        }
         cart.setTotalPrice(totalPrice);
     }
+
 
     private CartDTO convertToDTO(Cart cart) {
         CartDTO cartDTO = new CartDTO();
         cartDTO.setId(cart.getId());
         cartDTO.setTotalPrice(cart.getTotalPrice());
-        List<OrderItemDTO> items = cart.getItems().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+
+        List<OrderItemDTO> items = new ArrayList<>();
+        for (OrderItem item : cart.getItems()) {
+            items.add(convertToDTO(item));
+        }
         cartDTO.setItems(items);
+
         return cartDTO;
     }
+
 
     private OrderItemDTO convertToDTO(OrderItem item) {
         OrderItemDTO orderItemDTO = new OrderItemDTO();
